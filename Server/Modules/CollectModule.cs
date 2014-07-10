@@ -11,8 +11,6 @@ namespace Fybr.Server.Modules
             {
                 string token = o.token;
                 var json = new StreamReader(this.Request.Body).ReadToEnd();
-                //var model = JsonConvert.DeserializeObject(json);
-                //Console.WriteLine(model);
                 Brain.Socket.Send(json, token);
 
                 return Response.AsText("ok");
