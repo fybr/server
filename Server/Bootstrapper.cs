@@ -1,4 +1,5 @@
-﻿using Nancy;
+﻿using Fybr.Server.Extensions;
+using Nancy;
 using Nancy.Bootstrapper;
 using Nancy.TinyIoc;
 using Newtonsoft.Json;
@@ -18,6 +19,8 @@ namespace Fybr.Server
 
             pipelines.AfterRequest += (ctx) =>
             {
+                if (ctx.Request.Method == "OPTIONS")
+                    ctx.Response.PublicEndpoint(ctx.Request);
             };
 
         }

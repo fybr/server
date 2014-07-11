@@ -59,7 +59,9 @@
   <ItemGroup>
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Brain.cs" />
+    <Compile Include="Extensions\ModuleExtensions.cs" />
     <Compile Include="Modules\CollectModule.cs" />
+    <Compile Include="Modules\PushModule.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\SocketService.cs" />
