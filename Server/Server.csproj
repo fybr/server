@@ -35,6 +35,12 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CassandraSharp">
+      <HintPath>..\packages\cassandra-sharp-core.3.3.2\lib\net45\CassandraSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="CassandraSharp.Interfaces">
+      <HintPath>..\packages\cassandra-sharp-interfaces.3.3.1\lib\net45\CassandraSharp.Interfaces.dll</HintPath>
+    </Reference>
     <Reference Include="Fleck">
       <HintPath>..\packages\Fleck.0.10.0.27\lib\net40\Fleck.dll</HintPath>
     </Reference>
@@ -54,16 +60,29 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\packages\Rx-Core.2.1.30214.0\lib\Net45\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\packages\Rx-Interfaces.2.1.30214.0\lib\Net45\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\packages\Rx-Linq.2.1.30214.0\lib\Net45\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\packages\Rx-PlatformServices.2.1.30214.0\lib\Net45\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Brain.cs" />
     <Compile Include="Extensions\ModuleExtensions.cs" />
-    <Compile Include="Modules\CollectModule.cs" />
+    <Compile Include="Modules\EventModule.cs" />
     <Compile Include="Modules\PushModule.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\CassandraService.cs" />
     <Compile Include="Services\SocketService.cs" />
   </ItemGroup>
   <ItemGroup>

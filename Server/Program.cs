@@ -7,6 +7,7 @@ namespace Fybr.Server
     {
         static void Main(string[] args)
         {
+            Brain.Force();
             var uri =
                 new Uri("http://localhost:8080");
 
