@@ -22,7 +22,7 @@ namespace Fybr.Server.Services
                 Name = "default",
                 Endpoints = new EndpointsConfig()
                 {
-                    Servers = new[] { "192.168.1.149" }
+                    Servers = new[] { "127.0.0.1" }
                 },
 
             };
@@ -32,17 +32,17 @@ namespace Fybr.Server.Services
             Cluster.CreatePocoCommand().Execute("CREATE KEYSPACE IF NOT EXISTS fybr WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };").AsFuture().Wait();
 
             Cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.events ( " +
-                                                "   device text, " +
+                                                "   user text, " +
                                                 "   type text, " +
                                                 "   created timestamp," +
                                                 "   data text," +
-                                                "   PRIMARY KEY( (device, type), created) " +
+                                                "   PRIMARY KEY((user, type), created) " +
                                                 ");").AsFuture().Wait();
 
             _event = Cluster.CreatePocoCommand().Prepare("UPDATE fybr.events" +
                                                          "  SET data = ? " +
                                                          "WHERE" +
-                                                         "  device = ? AND " +
+                                                         "  user = ? AND " +
                                                          "  type = ? AND " +
                                                          "  created = dateof(now());");
 
@@ -57,7 +57,7 @@ namespace Fybr.Server.Services
             //await _event.Execute(e).AsFuture();
         }
 
-        public async Task<IEnumerable<Event>>  Get(string type)
+        public async Task<IEnumerable<Event>> Get(string type)
         {
             return await Cluster.CreatePocoCommand().Execute<Event>("SELECT * FROM fybr.events").AsFuture();
         }

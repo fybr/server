@@ -9,7 +9,6 @@ namespace Fybr.Server.Modules
 {
     public class Event
     {
-        public string Device { get; set; }
         public string User { get; set; }
         public string Type { get; set; }
         public string Data { get; set; }
@@ -19,7 +18,7 @@ namespace Fybr.Server.Modules
     public class EventModule : NancyModule
     {
         public EventModule()
-            : base("users/{user}/devices/{device}/events")
+            : base("users/events")
         {
 
             this.PublicEndpoint();
@@ -28,8 +27,9 @@ namespace Fybr.Server.Modules
 
             this.Before.AddItemToStartOfPipeline(context =>
             {
-                e.User = context.Parameters.user;
-                e.Device = context.Parameters.device;
+                string session = context.Request.Query.session;
+                e.User = Brain.Users.Get(session).Result.User;
+
                 return null;
             });
 
