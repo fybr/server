@@ -78,8 +78,9 @@
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="Brain.cs" />
     <Compile Include="Extensions\ModuleExtensions.cs" />
+    <Compile Include="Extensions\ResponseExtensions.cs" />
     <Compile Include="Modules\AuthModule.cs" />
-    <Compile Include="Modules\EventModule.cs" />
+    <Compile Include="Modules\UserModule.cs" />
     <Compile Include="Modules\PushModule.cs" />
     <Compile Include="Objects\UserRef.cs" />
     <Compile Include="Program.cs" />

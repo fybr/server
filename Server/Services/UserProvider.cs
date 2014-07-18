@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CassandraSharp;
 using CassandraSharp.CQLPoco;
+using CassandraSharp.CQLPropertyBag;
 using Fybr.Server.Objects;
 
 namespace Fybr.Server.Services
@@ -15,6 +16,8 @@ namespace Fybr.Server.Services
         private readonly IPreparedQuery<NonQuery> _login;
         private readonly IPreparedQuery<UserRef> _fromAuth;
         private IPreparedQuery<UserRef> _fromSession;
+        private IPreparedQuery<NonQuery> _addDevice;
+        private IPreparedQuery<PropertyBag> _getDevice;
 
         public UserProvider()
         {
@@ -29,6 +32,12 @@ namespace Fybr.Server.Services
                                                 "   id text, " +
                                                 "   user text, " +
                                                 "   PRIMARY KEY(id) " +
+                                                ");").AsFuture().Wait();
+
+            Brain.Cassandra.Cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.devices ( " +
+                                                "   device text, " +
+                                                "   user text, " +
+                                                "   PRIMARY KEY(user) " +
                                                 ");").AsFuture().Wait();
 
             _saveAuth = Brain.Cassandra.Cluster.CreatePocoCommand().Prepare<NonQuery>(
@@ -47,6 +56,10 @@ namespace Fybr.Server.Services
                 "SELECT user FROM fybr.sessions WHERE id = ?");
 
             _login = Brain.Cassandra.Cluster.CreatePocoCommand().Prepare<NonQuery>("INSERT INTO fybr.sessions (id, user) VALUES (?,?) USING TTL 2592000");
+
+            _addDevice = Brain.Cassandra.Cluster.CreatePocoCommand().Prepare<NonQuery>("UPDATE fybr.devices SET device = ? WHERE user = ?");
+
+            _getDevice = Brain.Cassandra.Cluster.CreatePropertyBagCommand().Prepare("SELECT device FROM fybr.devices WHERE user = ?");
         }
 
         public async Task Save(UserRef user)
@@ -61,9 +74,23 @@ namespace Fybr.Server.Services
 
         public async Task<UserRef> Get(string session)
         {
-            return (await _fromSession.Execute(new {id = session}).AsFuture()).FirstOrDefault();
+            return (await _fromSession.Execute(new { id = session }).AsFuture()).FirstOrDefault();
         }
 
+        public async Task<string> GetDevice(UserRef me)
+        {
+            var bag = new PropertyBag();
+            bag["user"] = me.User;
+            var f = (await _getDevice.Execute(bag).AsFuture()).FirstOrDefault();
+            if (f == null)
+                return null;
+            return (string) f["device"];
+        }
+
+        public async Task AddDevice(UserRef user, string device)
+        {
+            await _addDevice.Execute(new {user = user.User, device = device}).AsFuture();
+        }
 
         public async Task<string> Session(UserRef user)
         {

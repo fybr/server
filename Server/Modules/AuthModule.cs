@@ -12,19 +12,17 @@ namespace Fybr.Server.Modules
     public class AuthModule : NancyModule
     {
         public AuthModule()
-            :base("auth")
         {
-            this.Post["login", true] = async (o,ct) =>
+            this.Post["users/login", true] = async (o,ct) =>
             {
                 var credentials = this.Bind<Credentials>();
                 var user = await Brain.Users.Get(credentials);
                 if (user == null)
                     return 401;
                 return await Brain.Users.Session(user);
-                return null;
             };
 
-            this.Post["user", true] = async (o,ct) =>
+            this.Post["users", true] = async (o,ct) =>
             {
                 var credentials = this.Bind<UserRef>();
                 var user = new UserRef(credentials);
