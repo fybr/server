@@ -6,11 +6,13 @@ using Fybr.Server.Objects;
 using Nancy;
 using Nancy.ModelBinding;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Fybr.Server.Modules
 {
     public class Event
     {
+        public string Id { get; set; }
         public string User { get; set; }
         public string Type { get; set; }
         public string Data { get; set; }
@@ -34,12 +36,31 @@ namespace Fybr.Server.Modules
                 return null;
             });
 
+            this.Post["events/{type}", true] = async (o, ct) =>
+            {
+                var array = JArray.Parse(new StreamReader(this.Request.Body).ReadToEnd());
+                foreach (var obj in array)
+                {
+                    var e = new Event
+                    {
+                        User = me.User,
+                        Type = o.type,
+                        Id = obj["id"].ToString(),
+                        Data = obj.ToString()
+                    };
+                    await Brain.Cassandra.Event(e);
+                    Brain.Socket.Send(e);
+                }
+                return Response.AsOk();
+            };
+
             this.Post["events/{type}/{id}", true] = async (o, ct) =>
             {
                 var e = new Event
                 {
                     User = me.User,
                     Type = o.type,
+                    Id = o.id,
                     Data = new StreamReader(this.Request.Body).ReadToEnd()
                 };
                 await Brain.Cassandra.Event(e);
@@ -50,7 +71,7 @@ namespace Fybr.Server.Modules
             this.Get["events/{type}", true] = async (o,ct) =>
             {
                 string type = o.type;
-                var events = await Brain.Cassandra.Get(type);
+                var events = await Brain.Cassandra.Get(me, type);
                 var json = "[" + string.Join(" , ", events.Select(ev => ev.Data)) + "]";
                 return Response.AsText(json, "application/json");
             };

@@ -7,6 +7,7 @@ using CassandraSharp;
 using CassandraSharp.Config;
 using CassandraSharp.CQLPoco;
 using Fybr.Server.Modules;
+using Fybr.Server.Objects;
 
 namespace Fybr.Server.Services
 {
@@ -34,17 +35,19 @@ namespace Fybr.Server.Services
             Cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.events ( " +
                                                 "   user text, " +
                                                 "   type text, " +
+                                                "   id text, " +
                                                 "   created timestamp," +
                                                 "   data text," +
-                                                "   PRIMARY KEY((user, type), created) " +
+                                                "   PRIMARY KEY((user, type), id) " +
                                                 ");").AsFuture().Wait();
 
-            _event = Cluster.CreatePocoCommand().Prepare("UPDATE fybr.events" +
-                                                         "  SET data = ? " +
+            _event = Cluster.CreatePocoCommand().Prepare("UPDATE fybr.events SET " +
+                                                         "  data = ?, " +
+                                                         "  created = dateof(now()) " +
                                                          "WHERE" +
                                                          "  user = ? AND " +
                                                          "  type = ? AND " +
-                                                         "  created = dateof(now());");
+                                                         "  id = ?");
 
         }
 
@@ -57,9 +60,9 @@ namespace Fybr.Server.Services
             //await _event.Execute(e).AsFuture();
         }
 
-        public async Task<IEnumerable<Event>> Get(string type)
+        public async Task<IEnumerable<Event>> Get(UserRef user, string type)
         {
-            return await Cluster.CreatePocoCommand().Execute<Event>("SELECT * FROM fybr.events").AsFuture();
+            return await Cluster.CreatePocoCommand().Prepare<Event>("SELECT * FROM fybr.events WHERE user = ? AND type = ?").Execute(new {user = user.User, type}).AsFuture();
         }
     }
 }
