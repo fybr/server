@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fybr.Server.Extensions;
 using Fybr.Server.Objects;
 using Nancy;
 using Nancy.ModelBinding;
@@ -13,6 +14,8 @@ namespace Fybr.Server.Modules
     {
         public AuthModule()
         {
+            this.PublicEndpoint();
+
             this.Post["users/login", true] = async (o,ct) =>
             {
                 var credentials = this.Bind<Credentials>();
