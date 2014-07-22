@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Nancy.Hosting.Self;
 
 namespace Fybr.Server
@@ -7,7 +8,6 @@ namespace Fybr.Server
     {
         static void Main(string[] args)
         {
-            Brain.Force();
             var uri =
                 new Uri("http://localhost:8080");
 
@@ -15,6 +15,21 @@ namespace Fybr.Server
             {
                 UrlReservations = {CreateAutomatically = true},
             };
+
+
+            var watcher = new FileSystemWatcher
+            {
+                Path = Environment.CurrentDirectory,
+                NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite
+                               | NotifyFilters.FileName | NotifyFilters.DirectoryName,
+                Filter = "*.*"
+            };
+            watcher.Changed += OnChanged;
+            watcher.Deleted += OnChanged;
+            watcher.Created += OnChanged;
+            watcher.Renamed += OnChanged;;
+            watcher.EnableRaisingEvents = true;
+            Brain.Force();
             using (var host = new NancyHost(hc, uri))
             {
                 host.Start();
@@ -23,6 +38,12 @@ namespace Fybr.Server
                 Console.WriteLine("Press any [Enter] to close the host.");
                 Console.ReadLine();
             }
+        }
+
+        private static void OnChanged(object sender, FileSystemEventArgs eventArgs)
+        {
+            Console.WriteLine(eventArgs.Name + " modified, quitting...");
+            Environment.Exit(0);
         }
     }
 }
