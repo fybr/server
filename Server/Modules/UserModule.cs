@@ -48,7 +48,7 @@ namespace Fybr.Server.Modules
                         Id = obj["id"].ToString(),
                         Data = obj.ToString()
                     };
-                    await Brain.Cassandra.Event(e);
+                    await Brain.Database.Event(e);
                     Brain.Socket.Send(e);
                 }
                 return Response.AsOk();
@@ -63,7 +63,7 @@ namespace Fybr.Server.Modules
                     Id = o.id,
                     Data = new StreamReader(this.Request.Body).ReadToEnd()
                 };
-                await Brain.Cassandra.Event(e);
+                await Brain.Database.Event(e);
                 Brain.Socket.Send(e);
                 return Response.AsText("ok");
             };
@@ -71,7 +71,7 @@ namespace Fybr.Server.Modules
             this.Get["events/{type}", true] = async (o,ct) =>
             {
                 string type = o.type;
-                var events = await Brain.Cassandra.Get(me, type);
+                var events = await Brain.Database.Get(me, type);
                 var json = "[" + string.Join(" , ", events.Select(ev => ev.Data)) + "]";
                 return Response.AsText(json, "application/json");
             };

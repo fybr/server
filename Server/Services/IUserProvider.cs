@@ -10,7 +10,17 @@ using Fybr.Server.Objects;
 
 namespace Fybr.Server.Services
 {
-    public class UserProvider
+    public interface IUserProvider
+    {
+        Task<UserRef> Get(Credentials credentials);
+        Task<UserRef> Get(string session);
+        Task Save(UserRef user);
+        Task<string> GetDevice(UserRef me);
+        Task AddDevice(UserRef user, string device);
+        Task<string> Session(UserRef user);
+    }
+
+    public class CassandraUserProvider : IUserProvider
     {
         private readonly IPreparedQuery<NonQuery> _saveAuth;
         private readonly IPreparedQuery<NonQuery> _login;
@@ -19,47 +29,47 @@ namespace Fybr.Server.Services
         private IPreparedQuery<NonQuery> _addDevice;
         private IPreparedQuery<PropertyBag> _getDevice;
 
-        public UserProvider()
+        public CassandraUserProvider(ICluster cluster)
         {
-            Brain.Cassandra.Cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.auth ( " +
+            cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.auth ( " +
                                                 "   email text, " +
                                                 "   password text, " +
                                                 "   user text, " +
                                                 "   PRIMARY KEY((email, password)) " +
                                                 ");").AsFuture().Wait();
 
-            Brain.Cassandra.Cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.sessions ( " +
+            cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.sessions ( " +
                                                 "   id text, " +
                                                 "   user text, " +
                                                 "   PRIMARY KEY(id) " +
                                                 ");").AsFuture().Wait();
 
-            Brain.Cassandra.Cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.devices ( " +
+            cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.devices ( " +
                                                 "   device text, " +
                                                 "   user text, " +
                                                 "   PRIMARY KEY(user) " +
                                                 ");").AsFuture().Wait();
 
-            _saveAuth = Brain.Cassandra.Cluster.CreatePocoCommand().Prepare<NonQuery>(
+            _saveAuth = cluster.CreatePocoCommand().Prepare<NonQuery>(
                 "UPDATE fybr.auth SET" +
                 "   user = ? " +
                 "WHERE " +
                 "   email = ? AND " +
                 "   password = ?");
 
-            _fromAuth = Brain.Cassandra.Cluster.CreatePocoCommand().Prepare<UserRef>(
+            _fromAuth = cluster.CreatePocoCommand().Prepare<UserRef>(
                 "SELECT * FROM fybr.auth WHERE " +
                 "   email = ? AND " +
                 "   password = ?");
 
-            _fromSession = Brain.Cassandra.Cluster.CreatePocoCommand().Prepare<UserRef>(
+            _fromSession = cluster.CreatePocoCommand().Prepare<UserRef>(
                 "SELECT user FROM fybr.sessions WHERE id = ?");
 
-            _login = Brain.Cassandra.Cluster.CreatePocoCommand().Prepare<NonQuery>("INSERT INTO fybr.sessions (id, user) VALUES (?,?) USING TTL 2592000");
+            _login = cluster.CreatePocoCommand().Prepare<NonQuery>("INSERT INTO fybr.sessions (id, user) VALUES (?,?) USING TTL 2592000");
 
-            _addDevice = Brain.Cassandra.Cluster.CreatePocoCommand().Prepare<NonQuery>("UPDATE fybr.devices SET device = ? WHERE user = ?");
+            _addDevice = cluster.CreatePocoCommand().Prepare<NonQuery>("UPDATE fybr.devices SET device = ? WHERE user = ?");
 
-            _getDevice = Brain.Cassandra.Cluster.CreatePropertyBagCommand().Prepare("SELECT device FROM fybr.devices WHERE user = ?");
+            _getDevice = cluster.CreatePropertyBagCommand().Prepare("SELECT device FROM fybr.devices WHERE user = ?");
         }
 
         public async Task Save(UserRef user)

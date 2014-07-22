@@ -5,14 +5,14 @@ namespace Fybr.Server
     static class Brain
     {
         public static SocketService Socket { get; set; }
-        public static CassandraService Cassandra{ get; set; }
-        public static UserProvider Users { get; set; }
+        public static IDatabase Database { get; set; }
+        public static IUserProvider Users { get; set; }
 
         static Brain()
         {
             Socket = new SocketService();
-            Cassandra = new CassandraService();
-            Users = new UserProvider();
+            Database = new CassandraService();
+            Users = Database.BuildUserProvider();
         }
 
 

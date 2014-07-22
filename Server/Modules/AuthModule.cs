@@ -27,7 +27,7 @@ namespace Fybr.Server.Modules
 
             this.Post["users", true] = async (o,ct) =>
             {
-                var credentials = this.Bind<UserRef>();
+                var credentials = this.Bind<Credentials>();
                 var user = new UserRef(credentials);
                 await Brain.Users.Save(user);
                 var session = await Brain.Users.Session(user);

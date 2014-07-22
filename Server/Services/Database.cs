@@ -11,7 +11,14 @@ using Fybr.Server.Objects;
 
 namespace Fybr.Server.Services
 {
-    public class CassandraService
+    public interface IDatabase
+    {
+        IUserProvider BuildUserProvider();
+        Task Event(Event e);
+        Task<IEnumerable<Event>> Get(UserRef user, string type);
+    }
+
+    public class CassandraService : IDatabase
     {
         private IPreparedQuery<NonQuery> _event;
 
@@ -28,11 +35,11 @@ namespace Fybr.Server.Services
 
             };
             ClusterManager.Configure(new CassandraSharpConfig());
-            Cluster = ClusterManager.GetCluster(config);
+            _cluster = ClusterManager.GetCluster(config);
 
-            Cluster.CreatePocoCommand().Execute("CREATE KEYSPACE IF NOT EXISTS fybr WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };").AsFuture().Wait();
+            _cluster.CreatePocoCommand().Execute("CREATE KEYSPACE IF NOT EXISTS fybr WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };").AsFuture().Wait();
 
-            Cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.events ( " +
+            _cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.events ( " +
                                                 "   user text, " +
                                                 "   type text, " +
                                                 "   id text, " +
@@ -41,7 +48,7 @@ namespace Fybr.Server.Services
                                                 "   PRIMARY KEY((user, type), id) " +
                                                 ");").AsFuture().Wait();
 
-            _event = Cluster.CreatePocoCommand().Prepare("UPDATE fybr.events SET " +
+            _event = _cluster.CreatePocoCommand().Prepare("UPDATE fybr.events SET " +
                                                          "  data = ?, " +
                                                          "  created = dateof(now()) " +
                                                          "WHERE" +
@@ -51,7 +58,7 @@ namespace Fybr.Server.Services
 
         }
 
-        public ICluster Cluster { get; set; }
+        private ICluster _cluster { get; set; }
 
         public async Task Event(Event e)
         {
@@ -62,7 +69,12 @@ namespace Fybr.Server.Services
 
         public async Task<IEnumerable<Event>> Get(UserRef user, string type)
         {
-            return await Cluster.CreatePocoCommand().Prepare<Event>("SELECT * FROM fybr.events WHERE user = ? AND type = ?").Execute(new {user = user.User, type}).AsFuture();
+            return await _cluster.CreatePocoCommand().Prepare<Event>("SELECT * FROM fybr.events WHERE user = ? AND type = ?").Execute(new {user = user.User, type}).AsFuture();
+        }
+
+        public IUserProvider BuildUserProvider()
+        {
+           return new CassandraUserProvider(_cluster);
         }
     }
 }
