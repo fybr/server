@@ -30,7 +30,7 @@ namespace Fybr.Server.Services
                 Name = "default",
                 Endpoints = new EndpointsConfig()
                 {
-                    Servers = new[] { "127.0.0.1" }
+                    Servers = new[] { "192.168.1.149"}
                 },
 
             };

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,18 +20,21 @@ namespace Fybr.Server.Modules
             this.Post["users/login", true] = async (o,ct) =>
             {
                 var credentials = this.Bind<Credentials>();
-                var user = await Brain.Users.Get(credentials);
-                if (user == null)
+                var user = await Brain.Users.FromEmail(credentials.Email);
+                if(user == null || user.Password != credentials.Password)
                     return 401;
-                return await Brain.Users.Session(user);
+                return await Brain.Users.CreateSession(user);
             };
 
             this.Post["users", true] = async (o,ct) =>
             {
                 var credentials = this.Bind<Credentials>();
-                var user = new UserRef(credentials);
+                var user = await Brain.Users.FromEmail(credentials.Email);
+                if (user != null)
+                    return 401;
+                user = new UserRef(credentials);
                 await Brain.Users.Save(user);
-                var session = await Brain.Users.Session(user);
+                var session = await Brain.Users.CreateSession(user);
                 return session;
             };
 

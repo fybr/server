@@ -32,7 +32,7 @@ namespace Fybr.Server.Modules
             this.Before.AddItemToStartOfPipeline(context =>
             {
                 string session = context.Request.Query.session;
-                me.User = Brain.Users.Get(session).Result.User;
+                me.User = Brain.Users.FromSession(session).Result.User;
                 return null;
             });
 

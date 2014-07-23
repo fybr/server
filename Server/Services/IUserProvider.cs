@@ -12,30 +12,30 @@ namespace Fybr.Server.Services
 {
     public interface IUserProvider
     {
-        Task<UserRef> Get(Credentials credentials);
-        Task<UserRef> Get(string session);
+        Task<UserRef> FromSession(string session);
+        Task<UserRef> FromEmail(string email);
         Task Save(UserRef user);
         Task<string> GetDevice(UserRef me);
         Task AddDevice(UserRef user, string device);
-        Task<string> Session(UserRef user);
+        Task<string> CreateSession(UserRef user);
     }
 
     public class CassandraUserProvider : IUserProvider
     {
         private readonly IPreparedQuery<NonQuery> _saveAuth;
         private readonly IPreparedQuery<NonQuery> _login;
-        private readonly IPreparedQuery<UserRef> _fromAuth;
+        private readonly IPreparedQuery<UserRef> _fromEmail;
         private IPreparedQuery<UserRef> _fromSession;
         private IPreparedQuery<NonQuery> _addDevice;
         private IPreparedQuery<PropertyBag> _getDevice;
 
         public CassandraUserProvider(ICluster cluster)
         {
-            cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.auth ( " +
+            cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.users ( " +
                                                 "   email text, " +
                                                 "   password text, " +
                                                 "   user text, " +
-                                                "   PRIMARY KEY((email, password)) " +
+                                                "   PRIMARY KEY(email) " +
                                                 ");").AsFuture().Wait();
 
             cluster.CreatePocoCommand().Execute("CREATE TABLE IF NOT EXISTS fybr.sessions ( " +
@@ -51,16 +51,13 @@ namespace Fybr.Server.Services
                                                 ");").AsFuture().Wait();
 
             _saveAuth = cluster.CreatePocoCommand().Prepare<NonQuery>(
-                "UPDATE fybr.auth SET" +
-                "   user = ? " +
+                "UPDATE fybr.users SET" +
+                "   user = ?," +
+                "   password = ? " +
                 "WHERE " +
-                "   email = ? AND " +
-                "   password = ?");
+                "   email = ?");
 
-            _fromAuth = cluster.CreatePocoCommand().Prepare<UserRef>(
-                "SELECT * FROM fybr.auth WHERE " +
-                "   email = ? AND " +
-                "   password = ?");
+            _fromEmail = cluster.CreatePocoCommand().Prepare<UserRef>("SELECT * FROM fybr.users WHERE email = ?");
 
             _fromSession = cluster.CreatePocoCommand().Prepare<UserRef>(
                 "SELECT user FROM fybr.sessions WHERE id = ?");
@@ -77,12 +74,12 @@ namespace Fybr.Server.Services
             await _saveAuth.Execute(user).AsFuture();
         }
 
-        public async Task<UserRef> Get(Credentials credentials)
+        public async Task<UserRef> FromEmail(string email)
         {
-            return (await _fromAuth.Execute(credentials).AsFuture()).FirstOrDefault();
+            return (await _fromEmail.Execute(new { email }).AsFuture()).FirstOrDefault();
         }
 
-        public async Task<UserRef> Get(string session)
+        public async Task<UserRef> FromSession(string session)
         {
             return (await _fromSession.Execute(new { id = session }).AsFuture()).FirstOrDefault();
         }
@@ -102,7 +99,7 @@ namespace Fybr.Server.Services
             await _addDevice.Execute(new {user = user.User, device = device}).AsFuture();
         }
 
-        public async Task<string> Session(UserRef user)
+        public async Task<string> CreateSession(UserRef user)
         {
             var id = Guid.NewGuid().ToString();
             await _login.Execute(new {user = user.User, id = id}).AsFuture();

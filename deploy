@@ -1,0 +1,3 @@
+#!/bin/bash
+scp -r Server/bin/Debug/* dharun@jarvis.systems:/opt/fybr/server
+ssh -t dharun@jarvis.systems 'sudo supervisorctl restart fybr'
