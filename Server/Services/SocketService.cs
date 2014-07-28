@@ -13,7 +13,7 @@ namespace Fybr.Server.Services
         {
             public Connection(IWebSocketConnection connection)
             {
-                User = connection.ConnectionInfo.Path.Substring(1);
+                User = connection.ConnectionInfo.Path.Split('/')[1];
                 Socket = connection;
             }
 
@@ -41,17 +41,11 @@ namespace Fybr.Server.Services
 
         public void Send(Event e)
         {
-            /*
             Connection c = null;
             if(!_subs.TryGetValue(e.User, out c))
                 return;
 
             c.Socket.Send(e.Data);
-             */
-            foreach (var connection in _subs)
-            {
-                connection.Value.Socket.Send(e.Data);
-            }
         }
     }
 }
