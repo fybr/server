@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Fleck;
 using Fybr.Server.Modules;
+using Fybr.Server.Objects;
 
 namespace Fybr.Server.Services
 {
@@ -13,11 +14,11 @@ namespace Fybr.Server.Services
         {
             public Connection(IWebSocketConnection connection)
             {
-                User = connection.ConnectionInfo.Path.Split('/')[1];
+                User = GetUser(connection);
                 Socket = connection;
             }
 
-            public string User { get; set; }
+            public UserRef User { get; set; }
             public IWebSocketConnection Socket { get; set; }
         }
 
@@ -26,17 +27,24 @@ namespace Fybr.Server.Services
         public SocketService()
         {
             _subs = new Dictionary<string, Connection>();
-            var server = new WebSocketServer("ws://0.0.0.0:8181");
+            var server = new WebSocketServer("ws://0.0.0.0:8181/hose");
             server.Start(socket =>
             {
                 socket.OnOpen = () =>
                 {
                     var c = new Connection(socket);
-                    Console.WriteLine(c.User + " connected");
-                    _subs.Add(Guid.NewGuid().ToString(), c);
+                    if(c.User == null) return;
+                    Console.WriteLine(c.User.User + " connected");
+                    _subs.Add(c.User.User, c);
                 };
-                socket.OnClose = () => _subs.Remove(new Connection(socket).User);
+                socket.OnClose = () => _subs.Remove(GetUser(socket).User);
             });
+        }
+
+        private static UserRef GetUser(IWebSocketConnection connection)
+        {
+            var splits = connection.ConnectionInfo.Path.Split('/');
+            return splits.Length < 3 ? null : Brain.Users.FromSession(splits[2]).Result;
         }
 
         public void Send(Event e)

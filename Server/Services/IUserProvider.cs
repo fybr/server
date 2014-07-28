@@ -60,7 +60,7 @@ namespace Fybr.Server.Services
             _fromEmail = cluster.CreatePocoCommand().Prepare<UserRef>("SELECT * FROM fybr.users WHERE email = ?");
 
             _fromSession = cluster.CreatePocoCommand().Prepare<UserRef>(
-                "SELECT user FROM fybr.sessions WHERE id = ?");
+                "SELECT * FROM fybr.sessions WHERE id = ?");
 
             _login = cluster.CreatePocoCommand().Prepare<NonQuery>("INSERT INTO fybr.sessions (id, user) VALUES (?,?) USING TTL 2592000");
 
