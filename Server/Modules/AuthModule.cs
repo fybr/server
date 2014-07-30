@@ -20,6 +20,7 @@ namespace Fybr.Server.Modules
             this.Post["users/login", true] = async (o,ct) =>
             {
                 var credentials = this.Bind<Credentials>();
+                credentials.Email = credentials.Email.ToLower();
                 var user = await Brain.Users.FromEmail(credentials.Email);
                 if(user == null || user.Password != credentials.Password)
                     return 401;
@@ -29,6 +30,7 @@ namespace Fybr.Server.Modules
             this.Post["users", true] = async (o,ct) =>
             {
                 var credentials = this.Bind<Credentials>();
+                credentials.Email = credentials.Email.ToLower();
                 var user = await Brain.Users.FromEmail(credentials.Email);
                 if (user != null)
                     return 401;
