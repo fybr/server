@@ -1,6 +1,9 @@
-﻿using Fybr.Server.Extensions;
+﻿using System;
+using System.Security.Cryptography.X509Certificates;
+using Fybr.Server.Extensions;
 using Nancy;
 using Nancy.Bootstrapper;
+using Nancy.ErrorHandling;
 using Nancy.TinyIoc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -38,6 +41,21 @@ namespace Fybr.Server
         {
             this.ContractResolver = new CamelCasePropertyNamesContractResolver();
             this.Formatting = Formatting.Indented;
+        }
+    }
+
+    public class LoggingErrorHandler : IStatusCodeHandler 
+    {
+
+        public bool HandlesStatusCode(HttpStatusCode statusCode, NancyContext context)
+        {
+            return statusCode == HttpStatusCode.InternalServerError;
+        }
+
+        public void Handle(HttpStatusCode statusCode, NancyContext context)
+        {
+            var exception = ((Exception)context.Items[NancyEngine.ERROR_EXCEPTION]).InnerException;
+            Console.WriteLine(exception.StackTrace);
         }
     }
 }

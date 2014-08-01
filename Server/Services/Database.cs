@@ -63,8 +63,6 @@ namespace Fybr.Server.Services
         public async Task Event(Event e)
         {
             await _event.Execute(e).AsFuture();
-            //e.Device = "all";
-            //await _event.Execute(e).AsFuture();
         }
 
         public async Task<IEnumerable<Event>> Get(UserRef user, string type)

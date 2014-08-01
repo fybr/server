@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Fleck;
 using Fybr.Server.Modules;
 using Fybr.Server.Objects;
@@ -22,22 +23,29 @@ namespace Fybr.Server.Services
             public IWebSocketConnection Socket { get; set; }
         }
 
-        private Dictionary<string, Connection> _subs;
+        private MultiDictionary<string, Connection> _subs;
 
         public SocketService()
         {
-            _subs = new Dictionary<string, Connection>();
+            _subs = new MultiDictionary<string, Connection>();
             var server = new WebSocketServer("ws://0.0.0.0:8181/hose");
             server.Start(socket =>
             {
                 socket.OnOpen = () =>
                 {
                     var c = new Connection(socket);
-                    if(c.User == null) return;
+                    if (c.User == null) return;
                     Console.WriteLine(c.User.User + " connected");
                     _subs.Add(c.User.User, c);
                 };
-                socket.OnClose = () => _subs.Remove(GetUser(socket).User);
+                socket.OnClose = () =>
+                {
+                    var user = GetUser(socket);
+                    var conns = _subs.Get(user.User);
+                    var target = conns.FirstOrDefault(connection => connection.Socket == socket);
+                    if(target == null) return;
+                    conns.Remove(target);
+                };
             });
         }
 
@@ -49,11 +57,11 @@ namespace Fybr.Server.Services
 
         public void Send(Event e)
         {
-            Connection c = null;
-            if(!_subs.TryGetValue(e.User, out c))
-                return;
-
-            c.Socket.Send(e.Data);
+            var connections = _subs.Get(e.User);
+            foreach (var c in connections)
+            {
+                c.Socket.Send(e.Data);
+            }
         }
     }
 }

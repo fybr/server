@@ -44,15 +44,17 @@
     <Reference Include="Fleck">
       <HintPath>..\packages\Fleck.0.10.0.27\lib\net40\Fleck.dll</HintPath>
     </Reference>
-    <Reference Include="Nancy">
-      <HintPath>..\packages\Nancy.0.23.0\lib\net40\Nancy.dll</HintPath>
+    <Reference Include="Nancy, Version=0.23.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Nancy.0.23.2\lib\net40\Nancy.dll</HintPath>
     </Reference>
     <Reference Include="Nancy.Hosting.Self, Version=0.23.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Nancy.Hosting.Self.0.23.0\lib\net40\Nancy.Hosting.Self.dll</HintPath>
     </Reference>
-    <Reference Include="Nancy.Serialization.JsonNet">
-      <HintPath>..\packages\Nancy.Serialization.JsonNet.0.23.0\lib\net40\Nancy.Serialization.JsonNet.dll</HintPath>
+    <Reference Include="Nancy.Serialization.JsonNet, Version=0.23.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Nancy.Serialization.JsonNet.0.23.2\lib\net40\Nancy.Serialization.JsonNet.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
@@ -82,6 +84,7 @@
     <Compile Include="Modules\AuthModule.cs" />
     <Compile Include="Modules\UserModule.cs" />
     <Compile Include="Modules\PushModule.cs" />
+    <Compile Include="Objects\MultiDictionary.cs" />
     <Compile Include="Objects\UserRef.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
