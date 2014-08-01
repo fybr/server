@@ -58,6 +58,7 @@ namespace Fybr.Server.Services
         public void Send(Event e)
         {
             var connections = _subs.Get(e.User);
+            if(connections == null) return;
             foreach (var c in connections)
             {
                 c.Socket.Send(e.Data);

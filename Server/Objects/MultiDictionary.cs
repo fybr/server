@@ -26,7 +26,7 @@ namespace Fybr.Server.Objects
 
         public List<TV> Get(TK key)
         {
-            var list = new List<TV>();
+            List<TV> list = null;
             _data.TryGetValue(key, out list);
             return list;
         }

@@ -55,6 +55,7 @@ namespace Fybr.Server
         public void Handle(HttpStatusCode statusCode, NancyContext context)
         {
             var exception = ((Exception)context.Items[NancyEngine.ERROR_EXCEPTION]).InnerException;
+            Console.WriteLine(exception.ToString());
             Console.WriteLine(exception.StackTrace);
         }
     }
